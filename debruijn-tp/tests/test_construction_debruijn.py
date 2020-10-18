@@ -45,6 +45,7 @@ def test_build_graph():
     #AGA AG GA
     #GAG GA AG
     #AGA AG GA
+    print(graph.number_of_nodes())
     assert graph.number_of_nodes() == 4
     assert graph.number_of_edges() == 4
     assert "AG" in graph
