@@ -13,17 +13,17 @@
 
 """Perform assembly based on debruijn graph."""
 
+# from random import randint
+# from operator import itemgetter
+import statistics
 import argparse
 import os
 import sys
-import networkx as nx
-import matplotlib
-import matplotlib.pyplot as plt
-from operator import itemgetter
 import random
+import networkx as nx
+# import matplotlib
+# import matplotlib.pyplot as plt
 random.seed(9001)
-from random import randint
-import statistics
 
 __author__ = "Debbah Nagi"
 __copyright__ = "Universite Paris Diderot"
@@ -68,7 +68,7 @@ def get_arguments():
 def read_fastq(fastq):
     """
     Read a fastq file and return an iterator containing each sequence
-    on this fastq file. 
+    on this fastq file.
     Parameters
     ----------
     fastq : filepath
@@ -79,32 +79,20 @@ def read_fastq(fastq):
     iterator
         Iterator containing sequences from the fastq file.
     """
-    
+
     # bases = ['A','T','C','G']
     # dict_seq = {}
     # Opening and reading the file
     with open(fastq, "r") as f_read:
-        ''' 
-        Version with dict and list
-        for line in f_read:
-            # Lines starting with @ are identifiant of a sequence
-            if line.startswith("@"):
-                seq_id = line[1:]
-            # A line with a sequence will contain only bases    
-            elif all(base in line for base in bases):
-            # We create with that id and the sequence a key and id into the sequence
-                dict_seq[seq_id] = line
-        return dict_seq
-'''
         # Version with yield that i never used before
         for line in f_read:
             yield next(f_read).strip('\n')
             next(f_read)
             next(f_read)
-    
+
 def cut_kmer(sequence, k_mer):
     """
-    Take a sequence and cut it according a size given into k_mer. 
+    Take a sequence and cut it according a size given into k_mer.
     Parameters
     ----------
     sequence : Fasta.
@@ -118,20 +106,13 @@ def cut_kmer(sequence, k_mer):
         Iterator containing all k_mer possible from the sequnece.
 
     """
-    ''' Dict/list version
-    # We create a list for storing our k_mer
-    k_mer_list=[]
-    # The total k_mer poissible is len(sequence) minus the k_mer size plus one
-    for i in range(0, len(sequence)-k_mer+1):
-        k_mer_list.append(sequence[i:i+k_mer])
-    return k_mer_list'''
-    for i in range(0,len(sequence) - k_mer + 1 ):
-        yield(sequence[i:i+k_mer])
+    for i in range(0, len(sequence)-k_mer + 1):
+        yield sequence[i:i+k_mer]
 
 def build_kmer_dict(fastq, k_mer):
     """
-    Take a fastq file, read it, and cut each sequence according to 
-    a kmer size chosen. Return a dictionnary of k_mer and their count. 
+    Take a fastq file, read it, and cut each sequence according to
+    a kmer size chosen. Return a dictionnary of k_mer and their count.
     Parameters
     ----------
     fastq : filepath
@@ -142,32 +123,19 @@ def build_kmer_dict(fastq, k_mer):
     Returns
     -------
     dict
-        dict of kmer produced according the k_mer size, and containing the 
+        dict of kmer produced according the k_mer size, and containing the
         count of every kmer.
 
     """
-    ''' Dict version
-    k_mer_dict = {}
-    dict_seq = read_fastq(fastq)
-    for value in dict_seq.values():
-        kmerseq = cut_kmer(value, k_mer)
-        for kmer in kmerseq :
-            if kmer not in k_mer_dict.keys():
-                k_mer_dict[kmer] = 1
-            elif kmer in k_mer_dict.keys():
-                k_mer_dict[kmer] += 1
-    return k_mer_dict
-    '''
-    # Other version
-    kmer_dict ={}
+    km_dict = {}
     for seq in read_fastq(fastq):
         kmerseq = cut_kmer(seq, k_mer)
-        for kmer in kmerseq :
-            if kmer not in kmer_dict.keys():
-                kmer_dict[kmer] = 1
+        for kmer in kmerseq:
+            if kmer not in km_dict.keys():
+                km_dict[kmer] = 1
             else:
-                kmer_dict[kmer] += 1
-    return kmer_dict    
+                km_dict[kmer] += 1
+    return km_dict
 
 def build_graph(kmer_dict):
     """
@@ -185,19 +153,19 @@ def build_graph(kmer_dict):
 
     """
     # We create the graph
-    g = nx.DiGraph()
+    grap = nx.DiGraph()
     keys = kmer_dict.keys()
     # We create our suffix and prefix from the key of the dictionnary
     for key in keys:
         prefix = key[0:len(key)-1]
-        suffix = key[1:len(key)] 
+        suffix = key[1:len(key)]
         # We add nodes and edge of our graph according the suffix and prefix
-        g.add_node(prefix)
-        g.add_node(suffix)
-        g.add_edge(prefix, suffix, weight=kmer_dict[key])
-    return g
+        grap.add_node(prefix)
+        grap.add_node(suffix)
+        grap.add_edge(prefix, suffix, weight=kmer_dict[key])
+    return grap
 
-def get_starting_nodes(g):
+def get_starting_nodes(grap):
     """
     Taking out starting nodes from a networkX graph
 
@@ -213,13 +181,13 @@ def get_starting_nodes(g):
 
     """
     starting_nd = []
-    for node in g.nodes():
-        pred_list = list(g.predecessors(node))
+    for node in grap.nodes():
+        pred_list = list(grap.predecessors(node))
         if len(pred_list) == 0:
             starting_nd.append(node)
     return starting_nd
 
-def get_sink_nodes(g):
+def get_sink_nodes(grap):
     """
     Taking out sinking nodes from a networkX graph
 
@@ -234,16 +202,16 @@ def get_sink_nodes(g):
         list of sinking nodes.
 
     """
-    sink_nd= []
-    for node in g.nodes():
-        pred_list = list(g.successors(node))
+    sink_nd = []
+    for node in grap.nodes():
+        pred_list = list(grap.successors(node))
         if len(pred_list) == 0:
             sink_nd.append(node)
     return sink_nd
 
-def get_contigs(g, starting_nd, sink_nd):
+def get_contigs(grap, starting_nd, sink_nd):
     """
-    Getting all conting between starting nodes and sinkings nodes. 
+    Getting all conting between starting nodes and sinkings nodes.
 
     Parameters
     ----------
@@ -260,17 +228,17 @@ def get_contigs(g, starting_nd, sink_nd):
         list containing contigs.
 
     """
-    contig_list =[]
+    contig_list = []
     for starting in starting_nd:
         for sinking in sink_nd:
-            for path in nx.all_simple_paths(g, starting, sinking):
+            for path in nx.all_simple_paths(grap, starting, sinking):
                 contig = ""
-                for i in range(0, len(path)) :
+                for i in range(0, len(path)):
                     if not contig:
                         contig += path[i]
                     else:
                         contig += path[i][-1]
-                contig_list.append( (contig, len(contig)) )
+                contig_list.append((contig, len(contig)))
     return contig_list
 
 def fill(text, width=80):
@@ -279,7 +247,7 @@ def fill(text, width=80):
 
 def save_contigs(contig_list, output_name):
     """
-    Saving all contings into a fasta file format. 
+    Saving all contings into a fasta file format.
 
     Parameters
     ----------
@@ -298,7 +266,7 @@ def save_contigs(contig_list, output_name):
         for tpl in contig_list:
             fil_out.write(">contig_{} len={}\n".format(counter, tpl[1]))
             fil_out.write(fill(tpl[0]) + "\n")
-            counter +=1
+            counter += 1
 
 def std(val_list):
     """
@@ -317,7 +285,7 @@ def std(val_list):
     """
     return statistics.stdev(val_list)
 
-def path_average_weight(g, path):
+def path_average_weight(grap, path):
     """
     Perfom the calcul of the average weight from a path.
 
@@ -334,15 +302,15 @@ def path_average_weight(g, path):
         average weight of the path.
 
     """
-    weight=0
+    weight = 0
     for i in range(len(path)-1):
-        weight += g.edges[path[i], path[i+1]]["weight"]    
+        weight += grap.edges[path[i], path[i+1]]["weight"]
     avg_weight = weight/(len(path)-1)
     return avg_weight
 
-def remove_paths(g, paths, delete_entry_node, delete_sink_node):
+def remove_paths(grap, paths, delete_entry_node, delete_sink_node):
     """
-    
+    Remove a path from a graph with/without his entry and sinking nodes.
 
     Parameters
     ----------
@@ -362,18 +330,19 @@ def remove_paths(g, paths, delete_entry_node, delete_sink_node):
 
     """
     for i in range(0, len(paths)):
-        if delete_entry_node==True:
-            g.remove_node(paths[i][0])
-        if delete_sink_node==True:
-            g.remove_node(paths[i][-1])
-        g.remove_nodes_from(paths[i][1:-1])
-    return g
+        if delete_entry_node:
+            grap.remove_node(paths[i][0])
+        if delete_sink_node:
+            grap.remove_node(paths[i][-1])
+        grap.remove_nodes_from(paths[i][1:-1])
+    return grap
 
-def select_best_path(g, paths, len_paths,weight_paths, delete_entry_node=False, 
+def select_best_path(grap, paths, len_paths, weight_paths,
+                     delete_entry_node=False,
                      delete_sink_node=False):
     """
-    Removing unwanted paths from a graph, while/without removing entry and sinking
-    nodes. 
+    Removing unwanted paths from a graph, while/without removing entry and
+    sinking nodes.
 
     Parameters
     ----------
@@ -398,7 +367,7 @@ def select_best_path(g, paths, len_paths,weight_paths, delete_entry_node=False,
     """
 
     wm_paths = []
-    wm_weight =[]
+    wm_weight = []
     wm_length = []
     lm_paths = []
     lm_weight = []
@@ -410,7 +379,7 @@ def select_best_path(g, paths, len_paths,weight_paths, delete_entry_node=False,
             wm_weight.append(weight_paths[i])
             wm_length.append(len_paths[i])
 
-    for i in range(0,len(wm_paths)):
+    for i in range(0, len(wm_paths)):
         if wm_length[i] == max(wm_length):
             lm_length.append(wm_length[i])
             lm_paths.append(wm_paths[i])
@@ -419,14 +388,14 @@ def select_best_path(g, paths, len_paths,weight_paths, delete_entry_node=False,
     for path in paths:
         if path not in lm_paths:
             undes_paths.append(path)
-    g = remove_paths(g, undes_paths, delete_entry_node, delete_sink_node)
-    
-    return g
+    grap = remove_paths(grap, undes_paths, delete_entry_node, delete_sink_node)
 
-def solve_bubble(g, ancestor, descendant):
+    return grap
+
+def solve_bubble(grap, ancestor, descendant):
     """
     CHoosing the best path between two nodes containing differents paths
-    (bubble). 
+    (bubble).
 
     Parameters
     ----------
@@ -442,26 +411,26 @@ def solve_bubble(g, ancestor, descendant):
     Returns
     -------
     g : networkX graph
-        Graph obtained from the NetworkX module, with the best path chosen from 
-        the bubble.
+        Graph obtained from the NetworkX module, with the best path chosen
+        from the bubble.
 
     """
-    
+
     paths = []
     path_l = []
     path_w = []
-    simple_paths = nx.all_simple_paths(g, ancestor, descendant)
-    
+    simple_paths = nx.all_simple_paths(grap, ancestor, descendant)
+
     for path in simple_paths:
         path_l.append(len(path))
-        path_w.append(path_average_weight(g, path))
+        path_w.append(path_average_weight(grap, path))
         paths.append(path)
-    
-    g = select_best_path(g, paths, path_l, path_w)
-        
-    return g
 
-def simplify_bubbles(g):
+    grap = select_best_path(grap, paths, path_l, path_w)
+
+    return grap
+
+def simplify_bubbles(grap):
     """
     Simplifying the bubbles of a given graph
 
@@ -469,26 +438,26 @@ def simplify_bubbles(g):
     ----------
     g : networkX graph
         Graph obtained from the NetworkX module.
-        
+
     Returns
     -------
     g : networkX graph
         Graph obtained from the NetworkX module with bubbles simplified.
 
     """
-    
+
     bad_nd = []
-    for des_nd in g.nodes:
-        pred_list=list(g.predecessors(des_nd))
-        l = len(pred_list)
-        if l > 1:
-            anc_nd = nx.lowest_common_ancestor(g, pred_list[0], pred_list[1])
+    for des_nd in grap.nodes:
+        pred_list = list(grap.predecessors(des_nd))
+        leng = len(pred_list)
+        if leng > 1:
+            anc_nd = nx.lowest_common_ancestor(grap, pred_list[0], pred_list[1])
             bad_nd.append([anc_nd, des_nd])
     for anc_des in bad_nd:
-        g = solve_bubble(g, anc_des[0], anc_des[1])
-    return g
+        grap = solve_bubble(grap, anc_des[0], anc_des[1])
+    return grap
 
-def solve_entry_tips(g, starting_nd):
+def solve_entry_tips(grap, starting_nd):
     """
     Removing tips in starting not interesting, for keeping only pertinent ones.
 
@@ -509,31 +478,32 @@ def solve_entry_tips(g, starting_nd):
     """
     ancestors = []
     paths = []
-    path_l= []
+    path_l = []
     path_w = []
 
 
     for node in starting_nd:
-        for des in nx.descendants(g, node):
-          # with while it's tricky so we'll go with a for loop 
+        for des in nx.descendants(grap, node):
+          # with while it's tricky so we'll go with a for loop
           # while len(g.pred[des]) >= 2:
           #     if  des not in ancestors:
           #          ancestors.append(des)
-            n_predecessor = g.pred[des]
+            n_predecessor = grap.pred[des]
             if len(n_predecessor) >= 2 and des not in ancestors:
                 ancestors.append(des)
         for anc in ancestors:
-            for path in nx.all_simple_paths(g, node, anc):
-                path_w.append(path_average_weight(g, path))
+            for path in nx.all_simple_paths(grap, node, anc):
+                path_w.append(path_average_weight(grap, path))
                 path_l.append(len(path))
                 paths.append(path)
 
-        g = select_best_path(g, paths, path_l, path_w, delete_entry_node=True,
-                                     delete_sink_node=False)
+        grap = select_best_path(grap, paths, path_l, path_w,
+                                delete_entry_node=True,
+                                delete_sink_node=False)
 
-    return g
+    return grap
 
-def solve_out_tips(g, sink_nd):
+def solve_out_tips(grap, sink_nd):
     """
     Removing tips in sinking not interesting, for keeping only pertinent ones.
 
@@ -553,24 +523,25 @@ def solve_out_tips(g, sink_nd):
 
     descendants = []
     paths = []
-    path_l= []
+    path_l = []
     path_w = []
 
     for node in sink_nd:
-        for nd_nxt in nx.ancestors(g, node):
-            n_successor = g.succ[nd_nxt]
+        for nd_nxt in nx.ancestors(grap, node):
+            n_successor = grap.succ[nd_nxt]
             if nd_nxt not in descendants and len(n_successor) >= 2:
                 descendants.append(nd_nxt)
         for des in descendants:
-            for path in nx.all_simple_paths(g, des, node):
-                path_w.append(path_average_weight(g, path))
+            for path in nx.all_simple_paths(grap, des, node):
+                path_w.append(path_average_weight(grap, path))
                 path_l.append(len(path))
                 paths.append(path)
 
-        g = select_best_path(g, paths, path_l, path_w, delete_entry_node=False,
-                                     delete_sink_node=True)
+        grap = select_best_path(grap, paths, path_l, path_w,
+                                delete_entry_node=False,
+                                delete_sink_node=True)
 
-    return g
+    return grap
 
 
 #==============================================================
@@ -586,27 +557,27 @@ def main():
 
 if __name__ == '__main__':
     # Getting arguments
-    args =  main()
+    ARGS = main()
     # GEtting sequence from fastq
-    seq = read_fastq(args.fastq_file)
-    # Getting the k_mer dictionnary 
-    kmer_dict = build_kmer_dict(args.fastq_file, args.kmer_size)
+    SEQ = read_fastq(ARGS.fastq_file)
+    # Getting the k_mer dictionnary
+    KMER_DICT = build_kmer_dict(ARGS.fastq_file, ARGS.kmer_size)
     # Building the graph
-    g = build_graph(kmer_dict)
+    G = build_graph(KMER_DICT)
     # Getting the starting nodes and sinking nodes
-    starting_nd = get_starting_nodes(g)
-    sink_nd = get_sink_nodes(g)
+    STARTING_ND = get_starting_nodes(G)
+    SINK_ND = get_sink_nodes(G)
     # Taking out bubbles
-    g = simplify_bubbles(g)
+    G = simplify_bubbles(G)
     # Taking out bad entries and exits nodes
-    g = solve_entry_tips(g, starting_nd)
-    g = solve_out_tips(g, sink_nd)
+    G = solve_entry_tips(G, STARTING_ND)
+    G = solve_out_tips(G, SINK_ND)
     # Saving new starting nodes and sinking nodes
-    starting_nd = get_starting_nodes(g)
-    sink_nd = get_sink_nodes(g)
-    # Saving contigs 
-    contigs = get_contigs(g, starting_nd, sink_nd)
-    save_contigs(contigs, args.output_file)
-    
+    SINK_ND = get_starting_nodes(G)
+    STARTING_ND = get_sink_nodes(G)
+    # Saving contigs
+    CONTIGS = get_contigs(G, STARTING_ND, SINK_ND)
+    save_contigs(CONTIGS, ARGS.output_file)
+
     # Blast result with eva71.fna and contigs.fasta (kmer_size = 21):
-    # E-Value = 0, Perc.ident = 100.0% 
+    # E-Value = 0, Perc.ident = 100.0%
