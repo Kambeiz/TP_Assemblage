@@ -26,11 +26,11 @@ import networkx as nx
 random.seed(9001)
 
 __author__ = "Debbah Nagi"
-__copyright__ = "Universite Paris Diderot"
+__copyright__ = "Universite de Paris"
 __credits__ = ["Debbah Nagi"]
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer__ = "Your Name"
+__maintainer__ = "Debbah Nagi"
 __email__ = "debbah.nagi@gmail.fr"
 __status__ = "Developpement"
 
