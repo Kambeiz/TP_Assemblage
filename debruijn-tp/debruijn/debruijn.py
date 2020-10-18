@@ -148,7 +148,7 @@ def build_graph(kmer_dict):
 
     Returns
     -------
-    g : diGraph
+    grap : diGraph
         Network diGraph.
 
     """
@@ -171,7 +171,7 @@ def get_starting_nodes(grap):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
 
     Returns
@@ -193,7 +193,7 @@ def get_sink_nodes(grap):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
 
     Returns
@@ -291,7 +291,7 @@ def path_average_weight(grap, path):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     path : path
         path obtained from differents nodes of the graph.
@@ -314,7 +314,7 @@ def remove_paths(grap, paths, delete_entry_node, delete_sink_node):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     paths : list
         list of path obtained from differents nodes of the graph.
@@ -325,7 +325,7 @@ def remove_paths(grap, paths, delete_entry_node, delete_sink_node):
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module with a removed path.
 
     """
@@ -346,7 +346,7 @@ def select_best_path(grap, paths, len_paths, weight_paths,
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     paths : list
         list of path obtained from differents nodes of the graph.
@@ -361,7 +361,7 @@ def select_best_path(grap, paths, len_paths, weight_paths,
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module with unwanted paths removed.
 
     """
@@ -399,7 +399,7 @@ def solve_bubble(grap, ancestor, descendant):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     ancestor : node object
         node from a networkX graph, here the starting one of the bubble, or
@@ -410,7 +410,7 @@ def solve_bubble(grap, ancestor, descendant):
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module, with the best path chosen
         from the bubble.
 
@@ -436,12 +436,12 @@ def simplify_bubbles(grap):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module with bubbles simplified.
 
     """
@@ -463,7 +463,7 @@ def solve_entry_tips(grap, starting_nd):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     starting_nd : list
         list of starting nodes.
@@ -472,7 +472,7 @@ def solve_entry_tips(grap, starting_nd):
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module without entry tips uninteresting.
 
     """
@@ -509,14 +509,14 @@ def solve_out_tips(grap, sink_nd):
 
     Parameters
     ----------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module.
     sink_nd : list
         list of sinking nodes.
 
     Returns
     -------
-    g : networkX graph
+    grap : networkX graph
         Graph obtained from the NetworkX module without out tips uninteresting.
 
     """
