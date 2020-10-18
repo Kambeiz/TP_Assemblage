@@ -79,9 +79,6 @@ def read_fastq(fastq):
     iterator
         Iterator containing sequences from the fastq file.
     """
-
-    # bases = ['A','T','C','G']
-    # dict_seq = {}
     # Opening and reading the file
     with open(fastq, "r") as f_read:
         # Version with yield that i never used before
