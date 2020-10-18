@@ -581,3 +581,4 @@ if __name__ == '__main__':
 
     # Blast result with eva71.fna and contigs.fasta (kmer_size = 21):
     # E-Value = 0, Perc.ident = 100.0%
+    # Pylint test = 9.51/10
